@@ -70,3 +70,9 @@ def get_dataset_train_and_val():
 
   print("Loaded dataset...")
   return dataset_train, dataset_val
+
+def get_dataset_test():
+  IMAGE_PATH = "/host/space/horita-d/dataset/RENGE11k/txt/renge.txt"
+  dataset_test = Dataset(IMAGE_PATH, IMAGE_PATH, True)
+  print("Loaded dataset...")
+  return dataset_test

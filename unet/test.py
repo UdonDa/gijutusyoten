@@ -14,8 +14,37 @@ import numpy as np
 import torch.backends.cudnn as cudnn
 
 
+import torch
+import torch.nn as nn
+from torch.utils import data
+import torch.backends.cudnn as cudnn
+import os
+
+from model import get_unet
+from utils import make_dir, save_checkpoint, save_image
+from data_loader import get_dataset_test
+from sys import exit
+
 def test(config):
-  pass
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
+  cudnn.benchmark = True
+
+  dataset_test = get_dataset_test()
+  model = get_unet()
+  model.to(device)
+  model.load_state_dict(torch.load(config.model)['state_dict'])
+
+  for i, (image, image_path) in enumerate(data.DataLoader(dataset_test, batch_size = config.batch_size, shuffle = False)):
+    image = image.to(device)
+    FILE_NAME = image_path[0].split("/")[-1]
+
+    y_pred = model(image)
+    save_image(y_pred, "{}/{}".format(config.test_dir, FILE_NAME))
+
+    if i % 10 == 0:
+      print("Saved... {}".format(i))
+
+  print("Finished...!")
 
 
 if __name__ == '__main__':
@@ -30,7 +59,7 @@ if __name__ == '__main__':
 
   parser.add_argument('--result_dir', type=str, default='./results')
   parser.add_argument('--test_dir', type=str, default='./results/test')
-  parser.add_argument('--model', type=str, default='./results/models/30.pth')
+  parser.add_argument('--model', type=str, default='./results/models/10.pth')
   
 
 
