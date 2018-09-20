@@ -57,6 +57,16 @@ class Dataset(torch.utils.data.Dataset):
       return image, mask
 
 
+def get_dataset_train_and_val():
+  BASE = "/host/space/horita-d/programing/python/conf/cvpr2018/renge/unet_pytorch_inpainting/txt/"
 
+  TRAIN_IMAGE_PATH = BASE + "non_renge_short_paste_mask_train_train.txt"
+  TRAIN_MASK_PATH = BASE + "non_renge_short_train.txt"
+  TEST_IMAGE_PATH = BASE + "non_renge_short_paste_mask_train_test.txt" 
+  TEST_MASK_PATH = BASE + "non_renge_short_test.txt"
 
+  dataset_train = Dataset(TRAIN_IMAGE_PATH, TRAIN_MASK_PATH)
+  dataset_val = Dataset(TEST_IMAGE_PATH, TEST_MASK_PATH)
 
+  print("Loaded dataset...")
+  return dataset_train, dataset_val

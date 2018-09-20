@@ -58,6 +58,7 @@ class UpConv(nn.Module):
 
     self.in_channels = in_channels
     self.out_channels = out_channels
+    self.merge_mode = merge_mode
     self.up_mode = up_mode
     self.bn = nn.BatchNorm2d(out_channels)
 
@@ -137,8 +138,20 @@ class UNet(nn.Module):
       x, before_pool = module(x)
       encoder_outs.append(before_pool)
     
-    for module in self.up_convs:
+    for i, module in enumerate(self.up_convs):
       before_pool = encoder_outs[-(i+2)]
       x = module(before_pool, x)
     x = self.conv_final(x)
     return x
+
+
+def unet(**kwargs):
+  device = 'cuda'
+  model = UNet(3, depth=5, merge_mode='concat', start_filts=32)
+  model.cuda()
+  model.train()
+  return model
+
+def get_unet():
+  model = unet()
+  return model
