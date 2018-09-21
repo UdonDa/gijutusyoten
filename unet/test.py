@@ -26,6 +26,7 @@ from data_loader import get_dataset_test
 from sys import exit
 
 def test(config):
+  make_dir(config.test_dir )
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
   cudnn.benchmark = True
 

@@ -72,7 +72,11 @@ def get_dataset_train_and_val():
   return dataset_train, dataset_val
 
 def get_dataset_test():
+  BASE = "/host/space/horita-d/programing/python/conf/cvpr2018/renge/unet_pytorch_inpainting/txt/"
+  TRAIN_IMAGE_PATH = BASE + "non_renge_short_paste_mask_train_train.txt"
+
   IMAGE_PATH = "/host/space/horita-d/dataset/RENGE11k/txt/renge.txt"
-  dataset_test = Dataset(IMAGE_PATH, IMAGE_PATH, True)
+  # dataset_test = Dataset(IMAGE_PATH, IMAGE_PATH, True)
+  dataset_test = Dataset(TRAIN_IMAGE_PATH, IMAGE_PATH, True)
   print("Loaded dataset...")
   return dataset_test
