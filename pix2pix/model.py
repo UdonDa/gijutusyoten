@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn import init
 import torch.nn.functional as F
 import numpy as np
 import functools
@@ -51,11 +52,11 @@ class UnetBlock(nn.Module):
 
     self.model = nn.Sequential(*model)
 
-    def forward(self, x):
-        if self.outermost:
-            return self.model(x)
-        else:
-            return torch.cat([x, self.model(x)], 1)
+  def forward(self, x):
+    if self.outermost:
+      return self.model(x)
+    else:
+      return torch.cat([x, self.model(x)], 1)
 
 class Generatror(nn.Module):
   def __init__(self):
@@ -73,7 +74,7 @@ class Generatror(nn.Module):
     block = UnetBlock(self.ngf*4, self.ngf*8, submodule=block)
     block = UnetBlock(self.ngf*2, self.ngf*4, submodule=block)
     block = UnetBlock(self.ngf, self.ngf*2, submodule=block)
-    block = UnetBlock(self.output_nc, self.ngf, input_nc=self.inner_nc ,submodule=block, outermost=True)
+    block = UnetBlock(self.output_nc, self.ngf, input_nc=self.input_nc ,submodule=block, outermost=True)
     
     self.model = block
   
@@ -93,7 +94,7 @@ class Discriminator(nn.Module):
     kw = 4
     padw = 1
     sequence = [
-      nn.Conv2d(self.input_nc, self.ndf, kernel_size=kw, stride=2, padding=padw)
+      nn.Conv2d(self.input_nc, self.ndf, kernel_size=kw, stride=2, padding=padw),
       nn.LeakyReLU(0.2, True)
     ]
 
@@ -103,15 +104,15 @@ class Discriminator(nn.Module):
       nf_mult_prev = nf_mult
       nf_mult = min(2**n, 8)
       sequence += [
-        nn.Conv2d(ndf*nf_mult_prev, ndf*nf_mult, kernel_sizekw, stride=2, padding=padw),
-        self.norm_layer(ndf * nf_mult),
+        nn.Conv2d(self.ndf*nf_mult_prev, self.ndf*nf_mult, kernel_size=kw, stride=2, padding=padw),
+        self.norm_layer(self.ndf * nf_mult),
         nn.LeakyReLU(0.2, True)
       ]
     
     nf_mult_prev = nf_mult
     nf_mult = min(2**self.n_layer, 8)
     sequence += [
-      nn.Conv2d(ndf*nf_mult_prev, ndf*nf_mult, kernel_size=kw, stride=1, padding=padw)
+      nn.Conv2d(self.ndf*nf_mult_prev, self.ndf*nf_mult, kernel_size=kw, stride=1, padding=padw)
     ]
     
     self.model = nn.Sequential(*sequence)
@@ -121,13 +122,15 @@ class Discriminator(nn.Module):
 
 def get_G():
   G = Generatror()
+  return init_net(G)
 
 
 def get_D():
   D = Discriminator()
+  return init_net(D)
 
 
-def init(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
+def init_net(net, init_type='normal', init_gain=0.02):
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
   net.to(device)
   init_weight(net, gain=init_gain)
