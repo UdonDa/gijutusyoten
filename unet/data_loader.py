@@ -1,5 +1,5 @@
 path = './'
-
+from glob import glob
 import cv2
 import numpy as np
 import torch
@@ -11,16 +11,10 @@ from torch.autograd import Variable
 from PIL import Image
 
 
-def get_data_ary_from_txt(txt_path):
-  FILE = open(txt_path)
-  FILES = FILE.readlines()
-  FILE.close()
-  FILES = [f.replace("\n", "") for f in FILES]
-  return FILES
 class Dataset(torch.utils.data.Dataset):
-  def __init__(self, image_path, mask_path, is_test=False):
-    self.images = get_data_ary_from_txt(image_path)
-    self.masks = get_data_ary_from_txt(mask_path)
+  def __init__(self, is_test=False):
+    self.images = glob("../datasets/non_renge_short_paste_mask/*")
+    self.masks = glob("../datasets/non_renge_short/*")
     self.is_test = is_test
 
     self.transform = T.Compose([
@@ -41,31 +35,21 @@ class Dataset(torch.utils.data.Dataset):
       image = self.transform(image)
       return image, image_path
     else:
-      image = self.transform(Image.open(self.images[index]).convert('RGB'))
-      mask = self.transform(Image.open(self.masks[index]).convert('RGB'))
+      # image = self.transform(Image.open(self.images[index]).convert('RGB'))
+      # mask = self.transform(Image.open(self.masks[index]).convert('RGB'))
+
+      image = self.transform(load_image(self.images[index]))
+      mask = self.transform(load_image(self.masks[index]))
       return image, mask
 
+def load_image(path):
+  img = cv2.imread(str(path))
+  img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+  img = cv2.resize(img, (256, 256))
+  return img
 
-def get_dataset_train_and_val():
-  BASE = "/host/space/horita-d/programing/python/conf/cvpr2018/renge/unet_pytorch_inpainting/txt/"
 
-  TRAIN_IMAGE_PATH = BASE + "non_renge_short_paste_mask_train_train.txt"
-  TRAIN_MASK_PATH = BASE + "non_renge_short_train.txt"
-  TEST_IMAGE_PATH = BASE + "non_renge_short_paste_mask_train_test.txt" 
-  TEST_MASK_PATH = BASE + "non_renge_short_test.txt"
-
-  dataset_train = Dataset(TRAIN_IMAGE_PATH, TRAIN_MASK_PATH)
-  dataset_val = Dataset(TEST_IMAGE_PATH, TEST_MASK_PATH)
-
+def get_dataset_train():
+  dataset_train = Dataset()
   print("Loaded dataset...")
-  return dataset_train, dataset_val
-
-def get_dataset_test():
-  BASE = "/host/space/horita-d/programing/python/conf/cvpr2018/renge/unet_pytorch_inpainting/txt/"
-  TRAIN_IMAGE_PATH = BASE + "non_renge_short_paste_mask_train_train.txt"
-
-  IMAGE_PATH = "/host/space/horita-d/dataset/RENGE11k/txt/renge.txt"
-  # dataset_test = Dataset(IMAGE_PATH, IMAGE_PATH, True)
-  dataset_test = Dataset(TRAIN_IMAGE_PATH, IMAGE_PATH, True)
-  print("Loaded dataset...")
-  return dataset_test
+  return dataset_train
