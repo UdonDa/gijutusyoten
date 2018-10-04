@@ -1,3 +1,4 @@
+from glob import glob
 import cv2
 import numpy as np
 import torch
@@ -21,14 +22,8 @@ def load_image(path):
 
 class DataLoader(torch.utils.data.Dataset):
   def __init__(self, config):
-    # self.A_path = config.A_path
-    # self.B_path = config.B_path
-    BASE = "/host/space/horita-d/programing/python/conf/cvpr2018/renge/unet_pytorch_inpainting/txt"
-    self.A_path = "{}/non_renge_short_paste_mask_train_train.txt".format(BASE)
-    self.B_path = "{}/non_renge_short_train.txt".format(BASE)
-
-    self.A_images = self._get_data_ary_from_txt(self.A_path)
-    self.B_images = self._get_data_ary_from_txt(self.B_path)
+    self.A_images = glob("../datasets/non_renge_short_paste_mask/*")
+    self.B_images = glob("../datasets/non_renge_short/*")
 
     self.transform = T.Compose([
       T.ToPILImage(),
@@ -36,16 +31,9 @@ class DataLoader(torch.utils.data.Dataset):
       T.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 
-  def _get_data_ary_from_txt(self, txt_path):
-    FILE = open(txt_path)
-    FILES = FILE.readlines()
-    FILE.close()
-    FILES = [f.replace("\n", "") for f in FILES]
-    return FILES
-
   def __len__(self):
     return len(self.A_images)
-  
+
   def __getitem__(self, index):
     mini = min(len(self.A_images), len(self.B_images))
     if index not in range(mini):

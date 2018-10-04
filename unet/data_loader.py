@@ -8,52 +8,41 @@ from torch.nn import functional as F
 from torchvision import models
 from torchvision import transforms as T
 from torch.autograd import Variable
+from PIL import Image
 
-def load_image(path, mask=False):
-  img = cv2.imread(str(path))
-  img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-  img = cv2.resize(img, (256, 256))
-  return img
 
+def get_data_ary_from_txt(txt_path):
+  FILE = open(txt_path)
+  FILES = FILE.readlines()
+  FILE.close()
+  FILES = [f.replace("\n", "") for f in FILES]
+  return FILES
 class Dataset(torch.utils.data.Dataset):
   def __init__(self, image_path, mask_path, is_test=False):
-    self.IMAGE_PATH = image_path
-    self.MASK_PATH = mask_path
-    self.images = self._get_data_ary_from_txt(self.IMAGE_PATH)
-    self.masks = self._get_data_ary_from_txt(self.MASK_PATH)
+    self.images = get_data_ary_from_txt(image_path)
+    self.masks = get_data_ary_from_txt(mask_path)
     self.is_test = is_test
-  
-  def _get_data_ary_from_txt(self, txt_path):
-    FILE = open(txt_path)
-    FILES = FILE.readlines()
-    FILE.close()
-    FILES = [f.replace("\n", "") for f in FILES]
-    return FILES
-  
+
+    self.transform = T.Compose([
+      T.ToTensor(),
+      T.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ])
+
   def __len__(self):
     return len(self.images)
   
   def __getitem__(self, index):
     if index not in range(len(self.images)):
       return self.__getitem__(np.ramdom.randint(0, self.__len__()))
-    
-    transform = T.Compose([
-      T.ToPILImage(),
-      T.ToTensor(),
-      T.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
-    ])
 
     if self.is_test:
       image_path = self.images[index]
-      image = load_image(image_path)
-      image = transform(image)
+      image = Image.open(image_path).convert('RGB')
+      image = self.transform(image)
       return image, image_path
     else:
-      image_path = self.images[index]
-      mask_path = self.masks[index]
-
-      image = transform(load_image(image_path))
-      mask = transform(load_image(mask_path))
+      image = self.transform(Image.open(self.images[index]).convert('RGB'))
+      mask = self.transform(Image.open(self.masks[index]).convert('RGB'))
       return image, mask
 
 
